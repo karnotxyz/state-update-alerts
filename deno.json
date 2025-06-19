@@ -1,0 +1,10 @@
+{
+  "tasks": {
+    "dev": "deno run --watch main.ts"
+  },
+  "imports": {
+    "@aws-sdk/client-sns": "npm:@aws-sdk/client-sns@^3.830.0",
+    "@std/assert": "jsr:@std/assert@1",
+    "starknet": "npm:starknet@6.11.0"
+  }
+}
