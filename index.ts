@@ -46,7 +46,7 @@ async function main() {
     );
 
     // Every 5 minutes, check if the core contract is not behind by more than 3 hours.
-    coreContractStatus.watch(5 * 60, 4 * 60 * 60);
+    coreContractStatus.watch(20 * 60, 4 * 60 * 60);
   }
 }
 
