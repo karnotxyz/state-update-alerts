@@ -86,7 +86,7 @@ export class CoreContractStatus {
 
       await CoreContractStatus.pubSub.publish(
         message,
-        `Core Contract is lagging behind on ${this.chainName}`,
+        `🚨 CRITICAL: ${this.chainName} State Update Delayed by ${formattedTimeDiff}`,
         this.chainName,
       );
     }
