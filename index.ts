@@ -45,8 +45,11 @@ async function main() {
       snsPubSub,
     );
 
-    // Every 5 minutes, check if the core contract is not behind by more than 3 hours.
-    coreContractStatus.watch(20 * 60, 4 * 60 * 60);
+    // Every 20 minutes, check if the core contract is not behind by more than 3 hours.
+    // coreContractStatus.watch(20 * 60, 4 * 60 * 60);
+
+    // Check only once
+    coreContractStatus.checkCore(4 * 60 * 60);
   }
 }
 
