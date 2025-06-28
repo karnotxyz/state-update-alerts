@@ -12,12 +12,16 @@ function formatTimeDifference(seconds: number): string {
   const remainingSeconds = Math.floor(seconds % 60);
 
   const parts = [];
-  if (days > 0) parts.push(`${days} day${days !== 1 ? 's' : ''}`);
-  if (hours > 0) parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
-  if (minutes > 0) parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`);
-  if (remainingSeconds > 0 || parts.length === 0) parts.push(`${remainingSeconds} second${remainingSeconds !== 1 ? 's' : ''}`);
+  if (days > 0) parts.push(`${days} day${days !== 1 ? "s" : ""}`);
+  if (hours > 0) parts.push(`${hours} hour${hours !== 1 ? "s" : ""}`);
+  if (minutes > 0) parts.push(`${minutes} minute${minutes !== 1 ? "s" : ""}`);
+  if (remainingSeconds > 0 || parts.length === 0) {
+    parts.push(
+      `${remainingSeconds} second${remainingSeconds !== 1 ? "s" : ""}`,
+    );
+  }
 
-  return parts.join(', ');
+  return parts.join(", ");
 }
 
 export class CoreContractStatus {
@@ -71,8 +75,10 @@ export class CoreContractStatus {
 
     const currentTimestamp = Date.now() / 1000;
     const timeDiff = Number(currentTimestamp) - Number(lastSettlementTimestamp);
-    const contractlink = this.isTestnet ? `https://sepolia.voyager.online/contract/${this.coreContract.address}` : `https://voyager.online/contract/${this.coreContract.address}`;
-    if (timeDiff > maxWaitTime) {
+    const contractlink = this.isTestnet
+      ? `https://sepolia.voyager.online/contract/${this.coreContract.address}`
+      : `https://voyager.online/contract/${this.coreContract.address}`;
+    if (currentBlock.block_number > settledBlock && timeDiff > maxWaitTime) {
       const formattedTimeDiff = formatTimeDifference(timeDiff);
       const message =
         `🚨 ALERT: ${this.chainName} Core Contract is experiencing delays\n\n` +
@@ -81,7 +87,9 @@ export class CoreContractStatus {
         `Last Settlement Block: ${settledBlock}\n` +
         `Current Block: ${currentBlock.block_number}\n` +
         `Delay Duration: ${formattedTimeDiff}\n\n` +
-        `The contract has not settled for ${formattedTimeDiff}, which exceeds the maximum allowed delay of ${formatTimeDifference(maxWaitTime)}.`;
+        `The contract has not settled for ${formattedTimeDiff}, which exceeds the maximum allowed delay of ${
+          formatTimeDifference(maxWaitTime)
+        }.`;
       console.log("Publishing message", message);
 
       await CoreContractStatus.pubSub.publish(
@@ -90,7 +98,7 @@ export class CoreContractStatus {
         this.chainName,
       );
     }
-    return timeDiff > maxWaitTime;
+    return currentBlock.block_number > settledBlock && timeDiff > maxWaitTime;
   }
 
   public async watch(checkInterval: number, maxWaitTime: number) {
