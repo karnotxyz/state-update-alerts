@@ -61,16 +61,46 @@ export class CoreContractStatus {
     return instance;
   }
 
+  async estimateBlockTime(block_number: number): Promise<number> {
+    if (block_number <= 0) {
+      return 0;
+    }
+
+    // Block timestamp
+    const { timestamp: block_timestamp } = await this.l3Provider
+      .getBlock(block_number);
+
+    // Prev Block timestamp
+    const { timestamp: prev_block_timestamp } = await this.l3Provider.getBlock(
+      block_number - 1,
+    );
+
+    return block_timestamp - prev_block_timestamp;
+  }
+
   async checkCore(maxWaitTime: number): Promise<boolean> {
+    // Call getState on the core contract
     const getStateResult = await this.coreContract.call(
       "get_state",
       [],
     ) as string[];
-    const settledBlock = Number(getStateResult[1]);
-    const { timestamp: lastSettlementTimestamp } = await this.l3Provider
-      .getBlock(settledBlock);
 
+    // Get the the block till which the chain has settled
+    const settledBlock = Number(getStateResult[1]);
+
+    // Get the latest block on chain
     const currentBlock = await this.l3Provider.getBlock("latest");
+
+    // Return early if we have already settled till the latest block
+    if (settledBlock == currentBlock.block_number) {
+      console.log("Already on Latest, Yayyy !! ");
+      return true;
+    }
+
+    // Get timestamp at which the block after settlement was created
+    const { timestamp: lastSettlementTimestamp } = await this.l3Provider
+      .getBlock(settledBlock + 1);
+
     console.log(currentBlock);
 
     const currentTimestamp = Date.now() / 1000;
@@ -87,7 +117,9 @@ export class CoreContractStatus {
         `Last Settlement Block: ${settledBlock}\n` +
         `Current Block: ${currentBlock.block_number}\n` +
         `Delay Duration: ${formattedTimeDiff}\n\n` +
-        `The contract has not settled for ${formattedTimeDiff}, which exceeds the maximum allowed delay of ${
+        `The contract has not settled for ${formattedTimeDiff} after the block the block ${
+          settledBlock + 1
+        } was created, which exceeds the maximum allowed delay of ${
           formatTimeDifference(maxWaitTime)
         }.`;
       console.log("Publishing message", message);

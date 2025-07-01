@@ -49,7 +49,7 @@ async function main() {
     // coreContractStatus.watch(20 * 60, 4 * 60 * 60);
 
     // Check only once
-    coreContractStatus.checkCore(4 * 60 * 60);
+    coreContractStatus.checkCore(4.5 * 60 * 60);
   }
 }
 
