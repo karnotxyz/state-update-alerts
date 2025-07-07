@@ -11,14 +11,14 @@ const chains: Chain[] = [
     l3Url: "https://madara-rhino-l3.karnot.xyz",
     isTestnet: true,
   },
-  {
-    name: "Starkpay",
-    coreContractAddress:
-      "0x0035435434bcb6857bce7e1f5565846eed39d945026a93c02a9ac549f205165f",
-    l2Url: "https://starknet-sepolia.public.blastapi.io",
-    l3Url: "https://madara-starkpay-l3.karnot.xyz",
-    isTestnet: true,
-  },
+  // {
+  //   name: "Starkpay",
+  //   coreContractAddress:
+  //     "0x0035435434bcb6857bce7e1f5565846eed39d945026a93c02a9ac549f205165f",
+  //   l2Url: "https://starknet-sepolia.public.blastapi.io",
+  //   l3Url: "https://madara-starkpay-l3.karnot.xyz",
+  //   isTestnet: true,
+  // },
   {
     name: "agent-forge",
     coreContractAddress:
