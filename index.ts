@@ -49,7 +49,9 @@ async function main() {
     // coreContractStatus.watch(20 * 60, 4 * 60 * 60);
 
     // Check only once
+    console.log("Checking for", chain.name);
     coreContractStatus.checkCore(4.5 * 60 * 60);
+    console.log("Successfully done with: ", chain.name);
   }
 }
 

@@ -79,58 +79,77 @@ export class CoreContractStatus {
   }
 
   async checkCore(maxWaitTime: number): Promise<boolean> {
-    // Call getState on the core contract
-    const getStateResult = await this.coreContract.call(
-      "get_state",
-      [],
-    ) as string[];
+    try {
+      // Call getState on the core contract
+      const getStateResult = await this.coreContract.call(
+        "get_state",
+        [],
+      ) as string[];
 
-    // Get the the block till which the chain has settled
-    const settledBlock = Number(getStateResult[1]);
+      // Get the the block till which the chain has settled
+      const settledBlock = Number(getStateResult[1]);
 
-    // Get the latest block on chain
-    const currentBlock = await this.l3Provider.getBlock("latest");
+      // Get the latest block on chain
+      const currentBlock = await this.l3Provider.getBlock("latest");
 
-    // Return early if we have already settled till the latest block
-    if (settledBlock == currentBlock.block_number) {
-      console.log("Already on Latest, Yayyy !! ");
-      return true;
-    }
+      // Return early if we have already settled till the latest block
+      if (settledBlock == currentBlock.block_number) {
+        console.log("Already on Latest, Yayyy !! ");
+        return true;
+      }
 
-    // Get timestamp at which the block after settlement was created
-    const { timestamp: lastSettlementTimestamp } = await this.l3Provider
-      .getBlock(settledBlock + 1);
+      // Get timestamp at which the block after settlement was created
+      const { timestamp: lastSettlementTimestamp } = await this.l3Provider
+        .getBlock(settledBlock + 1);
 
-    console.log(currentBlock);
+      console.log(currentBlock);
 
-    const currentTimestamp = Date.now() / 1000;
-    const timeDiff = Number(currentTimestamp) - Number(lastSettlementTimestamp);
-    const contractlink = this.isTestnet
-      ? `https://sepolia.voyager.online/contract/${this.coreContract.address}`
-      : `https://voyager.online/contract/${this.coreContract.address}`;
-    if (currentBlock.block_number > settledBlock && timeDiff > maxWaitTime) {
-      const formattedTimeDiff = formatTimeDifference(timeDiff);
+      const currentTimestamp = Date.now() / 1000;
+      const timeDiff = Number(currentTimestamp) -
+        Number(lastSettlementTimestamp);
+      const contractlink = this.isTestnet
+        ? `https://sepolia.voyager.online/contract/${this.coreContract.address}`
+        : `https://voyager.online/contract/${this.coreContract.address}`;
+      if (currentBlock.block_number > settledBlock && timeDiff > maxWaitTime) {
+        const formattedTimeDiff = formatTimeDifference(timeDiff);
+        const message =
+          `🚨 ALERT: ${this.chainName} Core Contract is experiencing delays\n\n` +
+          `Contract Address: ${this.coreContract.address}\n` +
+          `Contract Link: ${contractlink}\n` +
+          `Last Settlement Block: ${settledBlock}\n` +
+          `Current Block: ${currentBlock.block_number}\n` +
+          `Delay Duration: ${formattedTimeDiff}\n\n` +
+          `The contract has not settled for ${formattedTimeDiff} after the block the block ${
+            settledBlock + 1
+          } was created, which exceeds the maximum allowed delay of ${
+            formatTimeDifference(maxWaitTime)
+          }.`;
+        console.log("Publishing message", message);
+
+        await CoreContractStatus.pubSub.publish(
+          message,
+          `🚨 CRITICAL: ${this.chainName} State Update Delayed by ${formattedTimeDiff}`,
+          this.chainName,
+        );
+      }
+      return currentBlock.block_number > settledBlock && timeDiff > maxWaitTime;
+    } catch (err) {
+      console.log("Error checking core", err);
+      // If we get an error, most probably madara is down
+      // Send a an alert here too
       const message =
-        `🚨 ALERT: ${this.chainName} Core Contract is experiencing delays\n\n` +
-        `Contract Address: ${this.coreContract.address}\n` +
-        `Contract Link: ${contractlink}\n` +
-        `Last Settlement Block: ${settledBlock}\n` +
-        `Current Block: ${currentBlock.block_number}\n` +
-        `Delay Duration: ${formattedTimeDiff}\n\n` +
-        `The contract has not settled for ${formattedTimeDiff} after the block the block ${
-          settledBlock + 1
-        } was created, which exceeds the maximum allowed delay of ${
-          formatTimeDifference(maxWaitTime)
-        }.`;
+        `🚨 ALERT: ${this.chainName} High probability of Madara being down\n\n` +
+        `Madara is down, please check the status of the chain\n\n` +
+        `Error Details: ${err}`;
       console.log("Publishing message", message);
 
       await CoreContractStatus.pubSub.publish(
         message,
-        `🚨 CRITICAL: ${this.chainName} State Update Delayed by ${formattedTimeDiff}`,
+        `🚨 CRITICAL: ${this.chainName} High probability of Madara being down`,
         this.chainName,
       );
+      return false;
     }
-    return currentBlock.block_number > settledBlock && timeDiff > maxWaitTime;
   }
 
   public async watch(checkInterval: number, maxWaitTime: number) {
