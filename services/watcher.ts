@@ -140,6 +140,7 @@ export class CoreContractStatus {
       const message =
         `🚨 ALERT: ${this.chainName} High probability of Madara being down\n\n` +
         `Madara is down, please check the status of the chain\n\n` +
+        `Quick Verification: Run 'starkli block' to check if the chain is responding\n\n` +
         `Error Details: ${err}`;
       console.log("Publishing message", message);
 
